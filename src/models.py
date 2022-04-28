@@ -33,12 +33,12 @@ class User(db.Model):
         else:
             return None    
     
-    @classmethod
-    def login(cls,email1,password):
-        user=cls.query.filter_by(email=email1).one_or_none()
-        if (not isinstance(user,cls)):
-            return user
-        if user.password==password:
-            return user
-        else:
-            return False       
+    # @classmethod
+    # def login(cls,email1,password):
+    #     user=cls.query.filter_by(email=email1).one_or_none()
+    #     if (not isinstance(user,cls)):
+    #         return user
+    #     if user.password==password:
+    #         return user
+    #     else:
+    #         return False       
