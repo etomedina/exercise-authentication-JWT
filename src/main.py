@@ -45,6 +45,7 @@ def handle_hello():
 
     return jsonify(response_body), 200
 
+#endpoint para registrarse (Hacer sign up)
 @app.route('/signup', methods=['POST'])
 def create_user():
     body=request.json
@@ -64,39 +65,48 @@ def create_user():
                 "msg":"One error happened during record data"
             }),500
     else:
-        return jsonify({"msg":"Please check your data, there are some mistake"}),400
+        return jsonify({"msg":"Check your data, there are some mistake"}),400
 
 
-    # print(body)
-    # print(request)
-    # return jsonify(body)
+#endpoint para crear token (Hacer login)
+@app.route('/token', methods=['POST'])
+def handle_token():
+    #extraer cuerpo de la solicitud
+    body = request.json
+    #Verificar user (existencia en BD)
+    email = body['email']
+    password = body['password']
+    
+    user = User.query.filter_by( email = email).one_or_none()
+    if user is None:
+        return jsonify({
+            'msj': 'Invalid user'
+        }),400
+    #Comparar contrase;a recibida con contrase'a BD
+    if password != user.password:
+        #En caso de rechazo status: 400 Bad Request
+        return jsonify({
+            'msj': 'Bad Request'
+        }),400
+    #En caso OK: Generar token
+    access_token = create_access_token(identity = user.id)
+    #Responder Status 200 y retornar token
+    return jsonify(
+        {'token': access_token,
+        'user': user.serialize()
+        }
+    ),201
 
-@app.route('/login', methods=['POST'])
-def login_user():
-    body=request.json
-    user_login=User.login(
-        body["email"],body["password"]
-    )
-    if user_login:
-        access_token=create_access_token(identity=user_login.id)
-        print (access_token)
-        return jsonify({ "token": access_token, "user_id": user_login.id }),201
-        ##return jsonify(access_token),201  #201 de create
-    else:
-        return jsonify({"msg":"Please check your data, there are some mistake"}),400 
 
-@app.route("/private", methods=["GET"])
+@app.route('/protegido', methods=["GET"])
 @jwt_required()
-def protected():
-    user_id=get_jwt_identity()
-    user=User.query.get(user_id)
-    return jsonify(user.serialize()),200
-
-
-
-
-
-
+def handle_protegido():
+    user_id = get_jwt_identity()
+    return jsonify(
+        {
+            'user_id':user_id
+        }
+    ),200
 
 
 # this only runs if `$ python src/main.py` is executed
